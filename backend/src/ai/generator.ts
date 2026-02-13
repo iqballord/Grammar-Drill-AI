@@ -1,5 +1,5 @@
 import { geminiModel, MURPHY_SYSTEM_PROMPT } from './config';
-import { AIQuestionSchema, QuestionType, type AIQuestion } from '../validation/schemas';
+import { AIQuestionSchema, BulkAIQuestionsSchema, QuestionType, type AIQuestion, type BulkAIQuestions } from '../validation/schemas';
 import { ZodError } from 'zod';
 
 /**
@@ -113,7 +113,130 @@ export async function generateQuestion(
 }
 
 /**
+ * Generate multiple questions for a unit in a SINGLE API call (optimized for quiz sessions)
+ * @param unitNumber - Unit number (1-115)
+ * @param count - Number of questions to generate (default: 10)
+ * @returns Array of validated questions
+ * @throws QuestionGenerationError if generation or validation fails
+ */
+export async function generateBulkQuestions(
+  unitNumber: number,
+  count: number = 10
+): Promise<BulkAIQuestions> {
+  try {
+    // Validate unit number
+    if (unitNumber < 1 || unitNumber > 115) {
+      throw new QuestionGenerationError(
+        `Unit number must be between 1 and 115, received: ${unitNumber}`
+      );
+    }
+
+    // Validate count
+    if (count < 1 || count > 20) {
+      throw new QuestionGenerationError(
+        `Question count must be between 1 and 20, received: ${count}`
+      );
+    }
+
+    // Build user prompt for bulk generation
+    const userPrompt = `Generate exactly ${count} unique grammar questions for Unit ${unitNumber} of "Essential Grammar in Use".
+
+Requirements:
+- Return a JSON array of exactly ${count} questions
+- Mix question types: MULTIPLE_CHOICE, TRUE_FALSE, and FILL_IN_THE_BLANK
+- Each question must be unique and test different aspects of the grammar topic
+- Ensure variety in difficulty and question structure
+
+Return ONLY a valid JSON array with no additional text.`;
+
+    // Combine system prompt and user prompt for Gemini
+    const fullPrompt = `${MURPHY_SYSTEM_PROMPT}\n\n${userPrompt}`;
+
+    // Call Gemini API with higher token limit for bulk generation
+    const result = await geminiModel.generateContent({
+      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 4000, // Increased for bulk generation
+      },
+    });
+
+    // Extract response content
+    const response = await result.response;
+    let content = response.text();
+
+    if (!content) {
+      throw new QuestionGenerationError('AI returned empty response');
+    }
+
+    // Clean up markdown code blocks if present
+    content = content.trim();
+    if (content.startsWith('```json')) {
+      content = content.replace(/^```json\s*\n?/, '').replace(/\n?```\s*$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/^```\s*\n?/, '').replace(/\n?```\s*$/, '');
+    }
+
+    // Parse JSON
+    let parsedQuestions: unknown;
+    try {
+      parsedQuestions = JSON.parse(content);
+    } catch (parseError) {
+      throw new QuestionGenerationError(
+        'Failed to parse AI response as JSON',
+        parseError
+      );
+    }
+
+    // Validate with Zod schema
+    try {
+      const validatedQuestions = BulkAIQuestionsSchema.parse(parsedQuestions);
+
+      // Verify we got the requested number of questions
+      if (validatedQuestions.length !== count) {
+        console.warn(
+          `AI generated ${validatedQuestions.length} questions instead of ${count}`
+        );
+      }
+
+      // Verify all questions are for the correct unit
+      for (const question of validatedQuestions) {
+        if (question.unit !== unitNumber) {
+          console.warn(
+            `Question has unit ${question.unit} instead of ${unitNumber}`
+          );
+        }
+      }
+
+      return validatedQuestions;
+    } catch (validationError) {
+      if (validationError instanceof ZodError) {
+        const errorMessages = (validationError as ZodError).issues
+          .map((err: any) => `${err.path.join('.')}: ${err.message}`)
+          .join(', ');
+        throw new QuestionGenerationError(
+          `AI response validation failed: ${errorMessages}`,
+          validationError
+        );
+      }
+      throw validationError;
+    }
+  } catch (error) {
+    if (error instanceof QuestionGenerationError) {
+      throw error;
+    }
+
+    // Handle Gemini API errors
+    throw new QuestionGenerationError(
+      'Failed to generate bulk questions from AI',
+      error
+    );
+  }
+}
+
+/**
  * Generate multiple questions for a unit (useful for batch generation)
+ * @deprecated Use generateBulkQuestions instead for better performance
  * @param unitNumber - Unit number (1-115)
  * @param count - Number of questions to generate
  * @returns Array of validated questions

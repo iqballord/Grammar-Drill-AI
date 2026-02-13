@@ -33,20 +33,31 @@ I'll help you master English grammar based on Raymond Murphy's "Essential Gramma
 
 📚 **Available Commands:**
 /start - Show this welcome message
-/study [unit] - Practice a specific unit (1-115)
+/quiz [unit] - Start a 10-question quiz session (recommended!)
+/study [unit] - Practice single questions
 /stats - View your learning statistics
 /help - Get help
 
-💡 **How to use:**
-Simply type \`/study 5\` to practice Unit 5, and I'll generate a question for you!
+💡 **Quick Start:**
+• \`/quiz 5\` - Take a 10-question quiz on Unit 5
+• \`/quiz 5 15\` - Take a 15-question quiz on Unit 5
+• \`/study 5\` - Practice one question at a time
 
 Let's improve your English together! 🚀`,
 
   HELP: `📖 **How to Use Grammar Learning Bot**
 
 **Commands:**
-• \`/study [unit_number]\` - Practice a specific unit
+• \`/quiz [unit] [count]\` - Start a quiz session (NEW!)
+  Examples:
+  • \`/quiz 12\` - 10 questions from Unit 12
+  • \`/quiz 12 5\` - 5 questions from Unit 12
+  • \`/quiz 12 15\` - 15 questions from Unit 12
+
+• \`/study [unit]\` - Practice single questions
   Example: \`/study 12\` for Unit 12
+
+• \`/cancel\` - Cancel active quiz session
 
 • \`/stats\` - View your progress and accuracy
 
@@ -56,6 +67,13 @@ Let's improve your English together! 🚀`,
 1. **Multiple Choice** - Select the correct answer from 4 options
 2. **True/False** - Choose True or False
 3. **Fill in the Blank** - Type your answer
+
+**Quiz Mode Features:**
+✨ Multiple questions in one session (1-20 questions)
+📊 Progress tracking (Question X of Y)
+🎯 Auto-advance to next question
+📈 Session summary with score and accuracy
+💾 All answers saved for analytics
 
 **Units Available:** 1-115 covering all essential grammar topics
 

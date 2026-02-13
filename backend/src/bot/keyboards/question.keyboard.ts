@@ -12,9 +12,9 @@ export function createMultipleChoiceKeyboard(question: AIQuestion, questionId: s
     throw new Error('MULTIPLE_CHOICE questions must have exactly 4 options');
   }
 
-  // Create 2x2 button layout
-  const buttons = question.options.map((option) => [
-    Markup.button.callback(option, `answer:${questionId}:${option}`),
+  // Create 2x2 button layout using option indices instead of full text
+  const buttons = question.options.map((option, index) => [
+    Markup.button.callback(option, `answer:${questionId}:${index}`),
   ]);
 
   return Markup.inlineKeyboard(buttons);
@@ -28,8 +28,8 @@ export function createMultipleChoiceKeyboard(question: AIQuestion, questionId: s
 export function createTrueFalseKeyboard(questionId: string) {
   return Markup.inlineKeyboard([
     [
-      Markup.button.callback('✅ True', `answer:${questionId}:True`),
-      Markup.button.callback('❌ False', `answer:${questionId}:False`),
+      Markup.button.callback('✅ True', `answer:${questionId}:T`),
+      Markup.button.callback('❌ False', `answer:${questionId}:F`),
     ],
   ]);
 }

@@ -36,7 +36,11 @@ Your role is to generate grammar quiz questions based on specific units from the
 4. Follow Murphy's teaching style: practical examples, real-world usage, and clear explanations.
 5. For TRUE_FALSE questions, the options must ALWAYS be exactly ["True", "False"].
 6. For MULTIPLE_CHOICE questions, provide exactly 4 options with only one correct answer.
-7. For FILL_IN_THE_BLANK questions, set options to null and provide the expected answer.
+7. For FILL_IN_THE_BLANK questions:
+   - Set options to null
+   - If there are multiple blanks, provide all words separated by spaces in correct_answer
+   - Example: "I ___ (go) to school" → correct_answer: "am going"
+   - Example: "Why ___ you ___ (laugh)?" → correct_answer: "are laughing"
 
 **RESPONSE FORMAT:**
 You MUST respond with valid JSON in this exact format:
@@ -80,6 +84,16 @@ Unit 44 (Modal verbs):
   "options": null,
   "correct_answer": "must",
   "explanation": "We use 'must' to express obligation or something that is necessary, especially when talking about rules and laws (Unit 44)."
+}
+
+Unit 3 (Present Continuous):
+{
+  "unit": 3,
+  "type": "FILL_IN_THE_BLANK",
+  "question": "Why ___ you ___ (laugh)? Is something funny?",
+  "options": null,
+  "correct_answer": "are laughing",
+  "explanation": "We use present continuous (am/is/are + verb-ing) for actions happening now. With 'you', we use 'are' + 'laughing' (Unit 3)."
 }
 
 Remember: Be strict about grammar accuracy, but encouraging in tone. Your goal is to help learners master English grammar through practice.`;

@@ -3,6 +3,9 @@ import { handleStart, handleHelp } from './handlers/start.handler';
 import { handleStudy } from './handlers/study.handler';
 import { handleStats } from './handlers/stats.handler';
 import { handleCallbackQuery, handleTextMessage } from './handlers/answer.handler';
+import { handleQuiz, handleCancelQuiz } from './handlers/quiz.handler';
+import { handleSessionCallbackQuery, handleSessionTextMessage } from './handlers/session-answer.handler';
+import { hasActiveSession } from './services/session.service';
 
 /**
  * Register all bot command handlers
@@ -13,12 +16,42 @@ export function registerHandlers() {
   bot.command('help', handleHelp);
   bot.command('study', handleStudy);
   bot.command('stats', handleStats);
+  bot.command('quiz', handleQuiz);
+  bot.command('cancel', handleCancelQuiz);
 
   // Callback query handler (for inline keyboard buttons)
-  bot.on('callback_query', handleCallbackQuery);
+  // Route to session handler if user has active session
+  bot.on('callback_query', async (ctx, next) => {
+    if (!ctx.from) {
+      return next();
+    }
+
+    const { getOrCreateUser } = await import('./services/user.service');
+    const user = await getOrCreateUser(ctx.from);
+
+    if (hasActiveSession(user.id)) {
+      return handleSessionCallbackQuery(ctx);
+    } else {
+      return handleCallbackQuery(ctx);
+    }
+  });
 
   // Text message handler (for fill-in-the-blank answers)
-  bot.on('text', handleTextMessage);
+  // Route to session handler if user has active session
+  bot.on('text', async (ctx, next) => {
+    if (!ctx.from) {
+      return next();
+    }
+
+    const { getOrCreateUser } = await import('./services/user.service');
+    const user = await getOrCreateUser(ctx.from);
+
+    if (hasActiveSession(user.id)) {
+      return handleSessionTextMessage(ctx);
+    } else {
+      return handleTextMessage(ctx);
+    }
+  });
 
   // Error handling
   bot.catch((err, ctx) => {

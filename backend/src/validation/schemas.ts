@@ -19,15 +19,7 @@ export const AIQuestionSchema = z.object({
   question: z.string().min(1),
   options: z
     .array(z.string())
-    .length(4)
-    .nullable()
-    .refine(
-      (options) => {
-        // options must be null for FILL_IN_THE_BLANK, and array for MULTIPLE_CHOICE
-        return options !== undefined;
-      },
-      { message: 'Options must be provided for MULTIPLE_CHOICE or null for FILL_IN_THE_BLANK' }
-    ),
+    .nullable(),
   correct_answer: z.string().min(1),
   explanation: z.string().min(1),
 }).refine(
@@ -86,9 +78,16 @@ export const UnitSchema = z.object({
 });
 
 /**
+ * Zod Schema for Bulk AI-generated Questions (array of questions)
+ * Used for quiz sessions with multiple questions
+ */
+export const BulkAIQuestionsSchema = z.array(AIQuestionSchema).min(1);
+
+/**
  * Type exports for TypeScript
  */
 export type AIQuestion = z.infer<typeof AIQuestionSchema>;
+export type BulkAIQuestions = z.infer<typeof BulkAIQuestionsSchema>;
 export type QuizAttempt = z.infer<typeof QuizAttemptSchema>;
 export type User = z.infer<typeof UserSchema>;
 export type Unit = z.infer<typeof UnitSchema>;
