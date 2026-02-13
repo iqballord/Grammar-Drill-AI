@@ -9,7 +9,7 @@ export const statsRouter = Router();
  */
 statsRouter.get('/:telegramId', async (req: Request, res: Response) => {
   try {
-    const telegramId = BigInt(req.params.telegramId);
+    const telegramId = BigInt(req.params.telegramId as string);
 
     // Find user
     const user = await prisma.user.findUnique({

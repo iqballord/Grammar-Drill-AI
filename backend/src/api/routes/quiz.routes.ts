@@ -60,7 +60,7 @@ quizRouter.post('/attempt', async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: 'Validation error',
-        details: error.errors,
+        details: (error as z.ZodError).issues,
       });
     }
 
@@ -75,7 +75,7 @@ quizRouter.post('/attempt', async (req: Request, res: Response) => {
  */
 quizRouter.get('/recent/:telegramId', async (req: Request, res: Response) => {
   try {
-    const telegramId = BigInt(req.params.telegramId);
+    const telegramId = BigInt(req.params.telegramId as string);
     const limit = parseInt(req.query.limit as string) || 10;
 
     // Find user

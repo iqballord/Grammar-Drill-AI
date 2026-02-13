@@ -64,7 +64,7 @@ async function testSetup() {
         unitId: question.unit,
         type: question.type,
         question: question.question,
-        options: question.options,
+        options: question.options ?? undefined,
         correctAnswer: question.correct_answer,
         explanation: question.explanation,
       },

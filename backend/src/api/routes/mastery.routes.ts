@@ -9,7 +9,7 @@ export const masteryRouter = Router();
  */
 masteryRouter.get('/:telegramId', async (req: Request, res: Response) => {
   try {
-    const telegramId = BigInt(req.params.telegramId);
+    const telegramId = BigInt(req.params.telegramId as string);
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -96,8 +96,8 @@ masteryRouter.get('/:telegramId', async (req: Request, res: Response) => {
  */
 masteryRouter.get('/:telegramId/unit/:unitId', async (req: Request, res: Response) => {
   try {
-    const telegramId = BigInt(req.params.telegramId);
-    const unitId = parseInt(req.params.unitId);
+    const telegramId = BigInt(req.params.telegramId as string);
+    const unitId = parseInt(req.params.unitId as string);
 
     if (unitId < 1 || unitId > 115) {
       return res.status(400).json({ error: 'Unit ID must be between 1 and 115' });

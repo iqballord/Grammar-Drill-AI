@@ -3,25 +3,15 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// This script is a placeholder as listModels is not directly available in this SDK version
 async function listModels() {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
+  console.log('Checking model availability...');
   try {
-    console.log('\n📋 Listing available Gemini models...\n');
-
-    const models = await genAI.listModels();
-
-    console.log(`Found ${models.length} models:\n`);
-
-    for (const model of models) {
-      console.log(`✅ ${model.name}`);
-      console.log(`   Display Name: ${model.displayName}`);
-      console.log(`   Description: ${model.description}`);
-      console.log(`   Supported Methods: ${model.supportedGenerationMethods?.join(', ')}`);
-      console.log('');
-    }
+     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+     console.log('Successfully initialized model client for gemini-1.5-flash');
   } catch (error) {
-    console.error('❌ Error listing models:', error);
+    console.error('Error:', error);
   }
 }
 

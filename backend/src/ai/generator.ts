@@ -89,8 +89,8 @@ export async function generateQuestion(
       return validatedQuestion;
     } catch (validationError) {
       if (validationError instanceof ZodError) {
-        const errorMessages = validationError.errors
-          .map((err) => `${err.path.join('.')}: ${err.message}`)
+        const errorMessages = (validationError as ZodError).issues
+          .map((err: any) => `${err.path.join('.')}: ${err.message}`)
           .join(', ');
         throw new QuestionGenerationError(
           `AI response validation failed: ${errorMessages}`,
