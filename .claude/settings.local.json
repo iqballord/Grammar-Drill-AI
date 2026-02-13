@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init -y)",
+      "Bash(npm install telegraf @prisma/client zod openai dotenv express cors)",
+      "Bash(npm install -D typescript @types/node @types/express @types/cors ts-node tsx nodemon prisma)",
+      "Bash(npm uninstall prisma @prisma/client)",
+      "Bash(npm install @prisma/client@5.22.0)",
+      "Bash(npm install -D prisma@5.22.0 typescript @types/node @types/express @types/cors ts-node tsx nodemon)",
+      "Bash(npx prisma init)",
+      "Bash(npm install @google/generative-ai)",
+      "Bash(npm uninstall openai)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma migrate dev --name init)",
+      "Bash(npm run test:setup)",
+      "Bash(tsx src/list-models.ts)",
+      "Bash(npx tsx src/list-models.ts)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

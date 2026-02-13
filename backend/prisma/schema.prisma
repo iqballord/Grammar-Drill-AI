@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_IN_THE_BLANK
+}
+
+model User {
+  id           String        @id @default(uuid())
+  telegramId   BigInt        @unique @map("telegram_id")
+  username     String?
+  createdAt    DateTime      @default(now()) @map("created_at")
+  lastActive   DateTime      @updatedAt @map("last_active")
+  quizAttempts QuizAttempt[]
+
+  @@map("users")
+}
+
+model Unit {
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String?       @db.Text
+  murphyPage   Int?          @map("murphy_page")
+  questions    Question[]
+  quizAttempts QuizAttempt[]
+
+  @@map("units")
+}
+
+model Question {
+  id            String        @id @default(uuid())
+  unitId        Int           @map("unit_id")
+  type          QuestionType
+  question      String        @db.Text
+  options       Json?
+  correctAnswer String        @map("correct_answer")
+  explanation   String        @db.Text
+  createdAt     DateTime      @default(now()) @map("created_at")
+  unit          Unit          @relation(fields: [unitId], references: [id])
+  quizAttempts  QuizAttempt[]
+
+  @@map("questions")
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  questionId  String   @map("question_id")
+  unitId      Int      @map("unit_id")
+  userAnswer  String   @map("user_answer")
+  isCorrect   Boolean  @map("is_correct")
+  attemptDate DateTime @default(now()) @map("attempt_date")
+  user        User     @relation(fields: [userId], references: [id])
+  question    Question @relation(fields: [questionId], references: [id])
+  unit        Unit     @relation(fields: [unitId], references: [id])
+
+  @@map("quiz_attempts")
+}
