@@ -1,7 +1,5 @@
 import { Context } from 'telegraf';
-import { generateQuestion } from '../../ai/generator';
 import { getOrCreateUser } from '../services/user.service';
-import { prisma } from '../../db/client';
 import { MESSAGES } from '../config';
 import {
   createMultipleChoiceKeyboard,
@@ -9,6 +7,7 @@ import {
   formatQuestionText,
 } from '../keyboards/question.keyboard';
 import { QuestionType } from '../../validation/schemas';
+import { getStudyQuestion } from '../services/question.service';
 
 /**
  * Store active questions in memory (in production, use Redis or database)
@@ -62,20 +61,16 @@ export async function handleStudy(ctx: Context) {
     let loadingMessageDeleted = false;
 
     try {
-      // Generate question using AI
-      const aiQuestion = await generateQuestion(unitNumber);
+      // Get question from database (or generate 20 new ones if unit is empty)
+      const questionData = await getStudyQuestion(unitNumber, user.id);
 
-      // Save question to database
-      const savedQuestion = await prisma.question.create({
-        data: {
-          unitId: aiQuestion.unit,
-          type: aiQuestion.type,
-          question: aiQuestion.question,
-          options: aiQuestion.options ?? undefined,
-          correctAnswer: aiQuestion.correct_answer,
-          explanation: aiQuestion.explanation,
-        },
-      });
+      if (!questionData) {
+        await ctx.telegram.deleteMessage(ctx.chat!.id, loadingMsg.message_id);
+        await ctx.reply('❌ Failed to get question. Please try again.');
+        return;
+      }
+
+      const { question: aiQuestion, questionId: savedQuestionId } = questionData;
 
       // Format question text
       const questionText = formatQuestionText(aiQuestion);
@@ -92,7 +87,7 @@ export async function handleStudy(ctx: Context) {
           questionText,
           {
             parse_mode: 'HTML',
-            ...createMultipleChoiceKeyboard(aiQuestion, savedQuestion.id),
+            ...createMultipleChoiceKeyboard(aiQuestion, savedQuestionId),
           }
         );
       } else if (aiQuestion.type === QuestionType.TRUE_FALSE) {
@@ -100,12 +95,12 @@ export async function handleStudy(ctx: Context) {
           questionText,
           {
             parse_mode: 'HTML',
-            ...createTrueFalseKeyboard(savedQuestion.id),
+            ...createTrueFalseKeyboard(savedQuestionId),
           }
         );
       } else if (aiQuestion.type === QuestionType.FILL_IN_THE_BLANK) {
         sentMessage = await ctx.reply(
-          `${questionText}\n\n✍️ <b>Type your answer:</b>`,
+          `${questionText}\n\n✍️ <b>Type your answer:</b>\n<i>Hint: Type only the word(s) that fill in the blank(s), separated by spaces</i>`,
           { parse_mode: 'HTML' }
         );
       }
@@ -114,7 +109,7 @@ export async function handleStudy(ctx: Context) {
       if (sentMessage) {
         const key = `${user.id}:${sentMessage.message_id}`;
         activeQuestions.set(key, {
-            questionId: savedQuestion.id,
+            questionId: savedQuestionId,
             correctAnswer: aiQuestion.correct_answer,
             explanation: aiQuestion.explanation,
             unitId: aiQuestion.unit,

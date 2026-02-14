@@ -5,6 +5,7 @@ import { statsRouter } from './routes/stats.routes';
 import { masteryRouter } from './routes/mastery.routes';
 import { errorBankRouter } from './routes/error-bank.routes';
 import { quizRouter } from './routes/quiz.routes';
+import { authMiddleware, isAuthEnabled } from './middleware/auth.middleware';
 
 dotenv.config();
 
@@ -25,12 +26,22 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Health check endpoint
+// Health check endpoint (public, no auth required)
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API Routes
+// Apply authentication middleware to all /api/* routes
+app.use('/api', authMiddleware);
+
+// Log auth status on startup
+if (isAuthEnabled()) {
+  console.log('🔒 API authentication enabled - bearer token required');
+} else {
+  console.warn('⚠️  API authentication DISABLED - all requests allowed (dev mode)');
+}
+
+// API Routes (protected by auth middleware)
 app.use('/api/stats', statsRouter);
 app.use('/api/mastery', masteryRouter);
 app.use('/api/error-bank', errorBankRouter);

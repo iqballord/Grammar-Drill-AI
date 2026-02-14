@@ -6,11 +6,22 @@ import { handleCallbackQuery, handleTextMessage } from './handlers/answer.handle
 import { handleQuiz, handleCancelQuiz } from './handlers/quiz.handler';
 import { handleSessionCallbackQuery, handleSessionTextMessage } from './handlers/session-answer.handler';
 import { hasActiveSession } from './services/session.service';
+import { whitelistMiddleware, isWhitelistEnabled } from './middleware/whitelist.middleware';
 
 /**
  * Register all bot command handlers
  */
 export function registerHandlers() {
+  // Apply whitelist middleware globally
+  bot.use(whitelistMiddleware);
+
+  // Log whitelist status
+  if (isWhitelistEnabled()) {
+    console.log('🔒 Bot whitelist enabled - only authorized users can access');
+  } else {
+    console.warn('⚠️  Bot whitelist DISABLED - all users can access (dev mode)');
+  }
+
   // Command handlers
   bot.command('start', handleStart);
   bot.command('help', handleHelp);
