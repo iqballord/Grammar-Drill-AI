@@ -49,8 +49,12 @@ export async function generateQuestion(
       : `Unit ${unitNumber}: ${unit.title}`;
 
     const userPrompt = questionType
-      ? `Generate a ${questionType} question for ${unitContext} of "Essential Grammar in Use".`
-      : `Generate a question for ${unitContext} of "Essential Grammar in Use". You can choose any question type (MULTIPLE_CHOICE, TRUE_FALSE, or FILL_IN_THE_BLANK).`;
+      ? `Generate a ${questionType} question for ${unitContext} of "Essential Grammar in Use".
+
+IMPORTANT: Include variety in sentence forms (positive, negative, or question forms) and vary difficulty (beginner, intermediate, or advanced).`
+      : `Generate a question for ${unitContext} of "Essential Grammar in Use". You can choose any question type (MULTIPLE_CHOICE, TRUE_FALSE, or FILL_IN_THE_BLANK).
+
+IMPORTANT: Include variety in sentence forms (positive, negative, or question forms) and vary difficulty (beginner, intermediate, or advanced).`;
 
     // Combine system prompt and user prompt for Gemini
     const fullPrompt = `${MURPHY_SYSTEM_PROMPT}\n\n${userPrompt}\n\nRespond with valid JSON only.`;
@@ -59,7 +63,7 @@ export async function generateQuestion(
     const result = await geminiModel.generateContent({
       contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
       generationConfig: {
-        temperature: 0.7,
+        temperature: 1,
         maxOutputTokens: 1000,
       },
     });
@@ -178,8 +182,24 @@ Requirements:
 - Mix question types: MULTIPLE_CHOICE, TRUE_FALSE, and FILL_IN_THE_BLANK
 - Each question must be unique and test different aspects of the grammar topic
 - All questions MUST focus specifically on "${unit.title}" (Unit ${unitNumber})
-- Ensure variety in difficulty and question structure
-- Questions should reflect Murphy's teaching approach for this specific unit
+
+**IMPORTANT - Question Variety:**
+- Include POSITIVE, NEGATIVE, and QUESTION forms (balanced mix)
+- Example for "am/is/are":
+  * Positive: "She ___ a teacher"
+  * Negative: "They ___ not/aren't ready"
+  * Question: "___ you happy?"
+- Mix difficulty levels: 20% beginner, 40% intermediate, 40% advanced
+- Include common learner mistakes in wrong options
+- Vary sentence complexity (simple, compound, complex)
+- Test different contexts (statements, questions, negatives, contractions)
+
+**Difficulty Guidelines:**
+- Beginner: Simple sentences, common vocabulary, straightforward grammar
+- Intermediate: Longer sentences, varied vocabulary, multiple grammar points
+- Advanced: Complex sentences, nuanced usage, tricky edge cases
+
+Questions should reflect Murphy's teaching approach for this specific unit.
 
 Return ONLY a valid JSON array with no additional text.`;
 
