@@ -69,10 +69,10 @@ export async function getStudyQuestion(
     };
   }
 
-  // 3. No questions in database, generate 20 questions for this unit
-  console.log(`📦 Unit ${unitId} has no questions, generating 20 new questions...`);
+  // 3. No questions in database, generate 30 questions for this unit
+  console.log(`📦 Unit ${unitId} has no questions, generating 30 new questions...`);
 
-  const aiQuestions = await generateBulkQuestions(unitId, 20);
+  const aiQuestions = await generateBulkQuestions(unitId, 30);
 
   // 4. Save all questions to database
   const savedQuestions = await Promise.all(

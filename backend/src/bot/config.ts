@@ -33,14 +33,17 @@ I'll help you master English grammar based on Raymond Murphy's "Essential Gramma
 
 📚 **Available Commands:**
 /start - Show this welcome message
-/quiz [unit] - Start a 10-question quiz session (recommended!)
+/quiz [unit] - Start a quiz session (single unit)
+/exam - Mixed units exam (NEW! 🎓)
 /study [unit] - Practice single questions
 /stats - View your learning statistics
 /help - Get help
 
 💡 **Quick Start:**
-• \`/quiz 5\` - Take a 10-question quiz on Unit 5
-• \`/quiz 5 15\` - Take a 15-question quiz on Unit 5
+• \`/quiz 5\` - 10-question quiz on Unit 5
+• \`/quiz 5 15\` - 15-question quiz on Unit 5
+• \`/exam 1,2,3\` - Mixed exam from units 1, 2, 3
+• \`/exam 1,2,3 50\` - 50 questions from units 1-3
 • \`/study 5\` - Practice one question at a time
 
 Let's improve your English together! 🚀`,
@@ -48,16 +51,24 @@ Let's improve your English together! 🚀`,
   HELP: `📖 **How to Use Grammar Learning Bot**
 
 **Commands:**
-• \`/quiz [unit] [count]\` - Start a quiz session (NEW!)
+• \`/quiz [unit] [count]\` - Start a quiz session (single unit)
   Examples:
   • \`/quiz 12\` - 10 questions from Unit 12
   • \`/quiz 12 5\` - 5 questions from Unit 12
   • \`/quiz 12 15\` - 15 questions from Unit 12
 
+• \`/exam [units] [count]\` - Mixed units exam session (NEW! 🎓)
+  Examples:
+  • \`/exam\` - 10 questions from your practiced units
+  • \`/exam 15\` - 15 questions (auto-selected)
+  • \`/exam 1,2,5,10\` - Questions from units 1, 2, 5, 10
+  • \`/exam 1,2,3 50\` - 50 questions from units 1, 2, 3
+  Features: Multi-unit mixing, per-unit score breakdown
+
 • \`/study [unit]\` - Practice single questions
   Example: \`/study 12\` for Unit 12
 
-• \`/cancel\` - Cancel active quiz session
+• \`/cancel\` - Cancel active quiz/exam session
 
 • \`/stats\` - View your progress and accuracy
 
@@ -74,6 +85,13 @@ Let's improve your English together! 🚀`,
 🎯 Auto-advance to next question
 📈 Session summary with score and accuracy
 💾 All answers saved for analytics
+
+**Exam Mode Features:**
+🎓 Mix questions from multiple units
+📊 Per-unit score breakdown
+📈 Identify weak areas across units
+💡 Smart recommendations based on performance
+🔄 Auto-select from your practice history
 
 **Units Available:** 1-115 covering all essential grammar topics
 

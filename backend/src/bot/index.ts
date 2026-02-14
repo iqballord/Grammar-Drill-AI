@@ -4,8 +4,10 @@ import { handleStudy } from './handlers/study.handler';
 import { handleStats } from './handlers/stats.handler';
 import { handleCallbackQuery, handleTextMessage } from './handlers/answer.handler';
 import { handleQuiz, handleCancelQuiz } from './handlers/quiz.handler';
+import { handleExam, handleCancelExam } from './handlers/exam.handler';
 import { handleSessionCallbackQuery, handleSessionTextMessage } from './handlers/session-answer.handler';
 import { hasActiveSession } from './services/session.service';
+import { hasActiveExamSession } from './services/exam.service';
 import { whitelistMiddleware, isWhitelistEnabled } from './middleware/whitelist.middleware';
 
 /**
@@ -28,10 +30,15 @@ export function registerHandlers() {
   bot.command('study', handleStudy);
   bot.command('stats', handleStats);
   bot.command('quiz', handleQuiz);
-  bot.command('cancel', handleCancelQuiz);
+  bot.command('exam', handleExam);
+  bot.command('cancel', async (ctx) => {
+    // Handle cancel for both quiz and exam sessions
+    await handleCancelQuiz(ctx);
+    await handleCancelExam(ctx);
+  });
 
   // Callback query handler (for inline keyboard buttons)
-  // Route to session handler if user has active session
+  // Route to session handler if user has active session (quiz or exam)
   bot.on('callback_query', async (ctx, next) => {
     if (!ctx.from) {
       return next();
@@ -40,7 +47,7 @@ export function registerHandlers() {
     const { getOrCreateUser } = await import('./services/user.service');
     const user = await getOrCreateUser(ctx.from);
 
-    if (hasActiveSession(user.id)) {
+    if (hasActiveSession(user.id) || hasActiveExamSession(user.id)) {
       return handleSessionCallbackQuery(ctx);
     } else {
       return handleCallbackQuery(ctx);
@@ -48,7 +55,7 @@ export function registerHandlers() {
   });
 
   // Text message handler (for fill-in-the-blank answers)
-  // Route to session handler if user has active session
+  // Route to session handler if user has active session (quiz or exam)
   bot.on('text', async (ctx, next) => {
     if (!ctx.from) {
       return next();
@@ -57,7 +64,7 @@ export function registerHandlers() {
     const { getOrCreateUser } = await import('./services/user.service');
     const user = await getOrCreateUser(ctx.from);
 
-    if (hasActiveSession(user.id)) {
+    if (hasActiveSession(user.id) || hasActiveExamSession(user.id)) {
       return handleSessionTextMessage(ctx);
     } else {
       return handleTextMessage(ctx);

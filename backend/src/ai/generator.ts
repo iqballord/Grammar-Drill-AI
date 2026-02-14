@@ -147,10 +147,10 @@ export async function generateBulkQuestions(
       );
     }
 
-    // Validate count
-    if (count < 1 || count > 20) {
+    // Validate count (increased to 50 for exam/study pooling)
+    if (count < 1 || count > 50) {
       throw new QuestionGenerationError(
-        `Question count must be between 1 and 20, received: ${count}`
+        `Question count must be between 1 and 50, received: ${count}`
       );
     }
 
