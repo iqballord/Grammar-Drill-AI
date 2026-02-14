@@ -168,11 +168,29 @@ export async function handleQuiz(ctx: Context) {
     }
   } catch (error) {
     console.error('Error in /quiz command:', error);
-    await ctx.reply(
-      '❌ Failed to generate quiz questions. Please try again later.\n\n' +
-      'If the problem persists, try a different unit or fewer questions.',
-      { parse_mode: 'Markdown' }
-    );
+
+    // Check if it's a rate limit error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isRateLimit = errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('Too Many Requests');
+
+    if (isRateLimit) {
+      await ctx.reply(
+        '⏳ <b>API Quota Exceeded</b>\n\n' +
+        '❌ Daily quota limit reached for AI question generation.\n\n' +
+        '<b>Solutions:</b>\n' +
+        '• Wait for quota to reset (resets daily)\n' +
+        '• Upgrade to paid plan at Google AI Studio\n' +
+        '• Contact admin to increase quota\n\n' +
+        'Please try again later.',
+        { parse_mode: 'HTML' }
+      );
+    } else {
+      await ctx.reply(
+        '❌ Failed to generate quiz questions. Please try again later.\n\n' +
+        'If the problem persists, try a different unit or fewer questions.',
+        { parse_mode: 'Markdown' }
+      );
+    }
   }
 }
 

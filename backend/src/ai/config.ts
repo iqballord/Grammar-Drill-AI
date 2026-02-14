@@ -8,15 +8,18 @@ dotenv.config();
  */
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+// Get model from environment or use default
+const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+
 export const geminiModel = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash',
+  model: MODEL_NAME,
 });
 
 /**
  * AI Model Configuration
  */
 export const AI_CONFIG = {
-  model: 'gemini-2.5-flash',
+  model: MODEL_NAME,
   temperature: 0.7,
   maxTokens: 1000,
 };
