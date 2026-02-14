@@ -1,6 +1,7 @@
 import { geminiModel, MURPHY_SYSTEM_PROMPT } from './config';
 import { AIQuestionSchema, BulkAIQuestionsSchema, QuestionType, type AIQuestion, type BulkAIQuestions } from '../validation/schemas';
 import { ZodError } from 'zod';
+import { prisma } from '../db/client';
 
 /**
  * Error thrown when AI fails to generate a valid question
@@ -31,10 +32,25 @@ export async function generateQuestion(
       );
     }
 
-    // Build user prompt
+    // Fetch unit info from database for better context
+    const unit = await prisma.unit.findUnique({
+      where: { id: unitNumber },
+    });
+
+    if (!unit) {
+      throw new QuestionGenerationError(
+        `Unit ${unitNumber} not found in database`
+      );
+    }
+
+    // Build user prompt with unit topic for better accuracy
+    const unitContext = unit.description
+      ? `Unit ${unitNumber}: ${unit.title} - ${unit.description}`
+      : `Unit ${unitNumber}: ${unit.title}`;
+
     const userPrompt = questionType
-      ? `Generate a ${questionType} question for Unit ${unitNumber} of "Essential Grammar in Use".`
-      : `Generate a question for Unit ${unitNumber} of "Essential Grammar in Use". You can choose any question type (MULTIPLE_CHOICE, TRUE_FALSE, or FILL_IN_THE_BLANK).`;
+      ? `Generate a ${questionType} question for ${unitContext} of "Essential Grammar in Use".`
+      : `Generate a question for ${unitContext} of "Essential Grammar in Use". You can choose any question type (MULTIPLE_CHOICE, TRUE_FALSE, or FILL_IN_THE_BLANK).`;
 
     // Combine system prompt and user prompt for Gemini
     const fullPrompt = `${MURPHY_SYSTEM_PROMPT}\n\n${userPrompt}\n\nRespond with valid JSON only.`;
@@ -138,14 +154,32 @@ export async function generateBulkQuestions(
       );
     }
 
+    // Fetch unit info from database for better context
+    const unit = await prisma.unit.findUnique({
+      where: { id: unitNumber },
+    });
+
+    if (!unit) {
+      throw new QuestionGenerationError(
+        `Unit ${unitNumber} not found in database`
+      );
+    }
+
+    // Build user prompt with unit topic for better accuracy
+    const unitContext = unit.description
+      ? `Unit ${unitNumber}: ${unit.title} - ${unit.description}`
+      : `Unit ${unitNumber}: ${unit.title}`;
+
     // Build user prompt for bulk generation
-    const userPrompt = `Generate exactly ${count} unique grammar questions for Unit ${unitNumber} of "Essential Grammar in Use".
+    const userPrompt = `Generate exactly ${count} unique grammar questions for ${unitContext} of "Essential Grammar in Use".
 
 Requirements:
 - Return a JSON array of exactly ${count} questions
 - Mix question types: MULTIPLE_CHOICE, TRUE_FALSE, and FILL_IN_THE_BLANK
 - Each question must be unique and test different aspects of the grammar topic
+- All questions MUST focus specifically on "${unit.title}" (Unit ${unitNumber})
 - Ensure variety in difficulty and question structure
+- Questions should reflect Murphy's teaching approach for this specific unit
 
 Return ONLY a valid JSON array with no additional text.`;
 
