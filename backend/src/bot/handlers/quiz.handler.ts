@@ -1,5 +1,4 @@
 import { Context } from 'telegraf';
-import { generateBulkQuestions } from '../../ai/generator';
 import { getOrCreateUser } from '../services/user.service';
 import { prisma } from '../../db/client';
 import { MESSAGES } from '../config';
@@ -98,38 +97,18 @@ export async function handleQuiz(ctx: Context) {
 
     // Show loading message
     const loadingMsg = await ctx.reply(
-      `🤖 Generating ${questionCount} questions for Unit ${unitNumber}...\n` +
+      `🤖 Preparing ${questionCount} questions for Unit ${unitNumber}...\n` +
       `📚 **${unit.title}**\n\n` +
-      `This may take a moment...`,
+      `Loading...`,
       { parse_mode: 'Markdown' }
     );
 
     let loadingMessageDeleted = false;
 
     try {
-      // Generate bulk questions using AI (single API call)
-      const aiQuestions = await generateBulkQuestions(unitNumber, questionCount);
-
-      // Save all questions to database
-      const savedQuestions = await Promise.all(
-        aiQuestions.map(async (aiQuestion) => {
-          const savedQuestion = await prisma.question.create({
-            data: {
-              unitId: aiQuestion.unit,
-              type: aiQuestion.type,
-              question: aiQuestion.question,
-              options: aiQuestion.options ?? undefined,
-              correctAnswer: aiQuestion.correct_answer,
-              explanation: aiQuestion.explanation,
-            },
-          });
-
-          return {
-            question: aiQuestion,
-            questionId: savedQuestion.id,
-          };
-        })
-      );
+      // Use smart pooling: get from database or generate if needed
+      const { getQuizQuestions } = await import('../services/question.service');
+      const savedQuestions = await getQuizQuestions(unitNumber, questionCount, user.id);
 
       // Create quiz session
       const session = createSession(

@@ -14,6 +14,54 @@ export class QuestionGenerationError extends Error {
 }
 
 /**
+ * Get unit-specific guidance to prevent overlap between similar units
+ */
+function getUnitSpecificGuidance(unitNumber: number, unitTitle: string): string {
+  // Special handling for Units 1-5 (am/is/are variations)
+  const amIsAreUnits: Record<number, string> = {
+    1: `**Unit 1 Focus: POSITIVE statements only**
+- Questions MUST use positive form: "I am", "You are", "He is", "She is", "It is", "We are", "They are"
+- DO NOT include question forms (Am I?, Are you?, Is he?)
+- Include negative forms (I'm not, You aren't, He isn't)
+- Examples: "I ___ happy", "She ___ a teacher", "They ___ students"`,
+
+    2: `**Unit 2 Focus: QUESTION forms only**
+- Questions MUST use question form: "Am I?", "Are you?", "Is he/she/it?", "Are we/they?"
+- DO NOT include positive statements (I am, You are)
+- DO NOT include negative forms (I'm not, You aren't)
+- Examples: "___ you ready?", "___ she a doctor?", "Where ___ they?"`,
+
+    3: `**Unit 3 Focus: PRESENT CONTINUOUS (-ing forms)**
+- Questions MUST use "am/is/are + verb-ing": "I am doing", "She is working", "They are playing"
+- Focus on actions happening NOW or TEMPORARY situations
+- Include time markers: now, at the moment, today, this week
+- Examples: "She ___ (work) right now", "They ___ (play) football at the moment"`,
+
+    4: `**Unit 4 Focus: ARE YOU DOING vs DO YOU DO (contrast)**
+- Questions MUST test the difference between present continuous and present simple
+- Contrast temporary vs permanent, now vs always
+- Examples: "I usually ___ coffee, but today I ___ tea" (drink/am drinking)`,
+
+    5: `**Unit 5 Focus: PRESENT SIMPLE (he/she/it) with -s/-es**
+- Questions MUST test third person singular: adds -s or -es
+- Focus on habits, routines, facts about he/she/it
+- Common mistakes: "he go" vs "he goes", "she watch" vs "she watches"
+- Examples: "He ___ to work every day" (goes), "She ___ TV in the evening" (watches)`,
+  };
+
+  if (amIsAreUnits[unitNumber]) {
+    return amIsAreUnits[unitNumber];
+  }
+
+  // Generic guidance for other units
+  return `**Unit ${unitNumber} Focus:**
+- Questions must STRICTLY test "${unitTitle}"
+- Avoid generic grammar that could fit other units
+- Be specific to this unit's learning objective`;
+}
+
+
+/**
  * Generate a grammar question for a specific unit using AI
  * @param unitNumber - Unit number (1-115) from Murphy's Grammar book
  * @param questionType - Optional specific question type to generate
@@ -51,10 +99,10 @@ export async function generateQuestion(
     const userPrompt = questionType
       ? `Generate a ${questionType} question for ${unitContext} of "Essential Grammar in Use".
 
-IMPORTANT: Include variety in sentence forms (positive, negative, or question forms) and vary difficulty (beginner, intermediate, or advanced).`
+IMPORTANT: Create an intermediate or advanced level question (NO easy/beginner). Use modern, professional contexts with complex sentences and nuanced grammar.`
       : `Generate a question for ${unitContext} of "Essential Grammar in Use". You can choose any question type (MULTIPLE_CHOICE, TRUE_FALSE, or FILL_IN_THE_BLANK).
 
-IMPORTANT: Include variety in sentence forms (positive, negative, or question forms) and vary difficulty (beginner, intermediate, or advanced).`;
+IMPORTANT: Create an intermediate or advanced level question (NO easy/beginner). Use modern, professional contexts with complex sentences and nuanced grammar.`;
 
     // Combine system prompt and user prompt for Gemini
     const fullPrompt = `${MURPHY_SYSTEM_PROMPT}\n\n${userPrompt}\n\nRespond with valid JSON only.`;
@@ -174,8 +222,33 @@ export async function generateBulkQuestions(
       ? `Unit ${unitNumber}: ${unit.title} - ${unit.description}`
       : `Unit ${unitNumber}: ${unit.title}`;
 
-    // Build user prompt for bulk generation
-    const userPrompt = `Generate exactly ${count} unique grammar questions for ${unitContext} of "Essential Grammar in Use".
+    // Build user prompt for bulk generation with unit-specific focus
+    const unitFocus = getUnitSpecificGuidance(unitNumber, unit.title);
+
+    const userPrompt = `Generate exactly ${count} UNIQUE grammar questions for ${unitContext} of "Essential Grammar in Use".
+
+**STRICT UNIQUENESS RULES:**
+- Every question MUST use a unique scenario
+- DO NOT repeat verbs or subjects across the ${count} questions
+- Example: If Question 1 is about "Sarah" and "coding", Question 2 must be about a different subject and action
+- Ensure the questions cover different aspects of Unit ${unitNumber} to provide comprehensive review
+- Avoid generic examples like "I am a student" unless specifically required by the unit's core lesson
+
+**PERSONA & CONTEXT DIVERSITY:**
+While following Raymond Murphy's grammar rules, use diverse and modern scenarios to make sentences engaging and unique. Mix these contexts across your questions:
+- Software development & tech: developers, programmers, startups, debugging, deploying apps
+- Remote work & digital nomads: working from home, video calls, time zones, coworking spaces
+- Modern lifestyle: streaming, podcasts, social media, fitness apps, online shopping
+- Travel & adventure: backpacking, flight bookings, hotels, exploring cities
+- Hobbies & interests: gaming, photography, cooking, music production, cycling
+- Business & entrepreneurship: freelancing, clients, projects, deadlines, meetings
+- Education & learning: online courses, tutorials, certifications, studying languages
+
+**CRITICAL - Uniqueness:**
+- Each question MUST be completely different from others in the set
+- DO NOT repeat the same sentence structure with minor word changes
+- Ensure diverse vocabulary and contexts across all questions
+- Check that no two questions test the exact same concept in the same way
 
 Requirements:
 - Return a JSON array of exactly ${count} questions
@@ -183,23 +256,25 @@ Requirements:
 - Each question must be unique and test different aspects of the grammar topic
 - All questions MUST focus specifically on "${unit.title}" (Unit ${unitNumber})
 
+${unitFocus}
+
 **IMPORTANT - Question Variety:**
 - Include POSITIVE, NEGATIVE, and QUESTION forms (balanced mix)
-- Example for "am/is/are":
-  * Positive: "She ___ a teacher"
-  * Negative: "They ___ not/aren't ready"
-  * Question: "___ you happy?"
-- Mix difficulty levels: 20% beginner, 40% intermediate, 40% advanced
+- Mix difficulty levels: 40% intermediate, 60% advanced (NO beginner/easy questions)
 - Include common learner mistakes in wrong options
-- Vary sentence complexity (simple, compound, complex)
+- Vary sentence complexity (compound, complex)
 - Test different contexts (statements, questions, negatives, contractions)
 
 **Difficulty Guidelines:**
-- Beginner: Simple sentences, common vocabulary, straightforward grammar
-- Intermediate: Longer sentences, varied vocabulary, multiple grammar points
-- Advanced: Complex sentences, nuanced usage, tricky edge cases
+- Intermediate (40%): Longer sentences, varied scenarios, multiple grammar points, nuanced vocabulary
+- Advanced (60%): Complex sentences, tricky edge cases, subtle grammar distinctions, real-world professional contexts
 
-Questions should reflect Murphy's teaching approach for this specific unit.
+**CRITICAL - Unit Specificity:**
+- DO NOT generate generic questions that could fit any unit
+- Each question must clearly test the SPECIFIC grammar point of this unit
+- Avoid overlapping with adjacent units (e.g., Unit 1 vs Unit 2)
+
+Questions should reflect Murphy's teaching approach for this specific unit, but with modern, relatable scenarios.
 
 Return ONLY a valid JSON array with no additional text.`;
 
@@ -246,15 +321,36 @@ Return ONLY a valid JSON array with no additional text.`;
     try {
       const validatedQuestions = BulkAIQuestionsSchema.parse(parsedQuestions);
 
-      // Verify we got the requested number of questions
-      if (validatedQuestions.length !== count) {
+      // Remove duplicates based on question text (case-insensitive, trimmed)
+      const uniqueQuestions: BulkAIQuestions = [];
+      const seenQuestions = new Set<string>();
+
+      for (const question of validatedQuestions) {
+        const normalizedQuestion = question.question.toLowerCase().trim();
+
+        if (!seenQuestions.has(normalizedQuestion)) {
+          seenQuestions.add(normalizedQuestion);
+          uniqueQuestions.push(question);
+        }
+      }
+
+      // Log warning if duplicates were found
+      const duplicateCount = validatedQuestions.length - uniqueQuestions.length;
+      if (duplicateCount > 0) {
         console.warn(
-          `AI generated ${validatedQuestions.length} questions instead of ${count}`
+          `⚠️ Removed ${duplicateCount} duplicate question(s) for unit ${unitNumber}`
+        );
+      }
+
+      // Verify we got enough unique questions
+      if (uniqueQuestions.length !== count) {
+        console.warn(
+          `AI generated ${uniqueQuestions.length} unique questions instead of ${count} (${duplicateCount} duplicates removed)`
         );
       }
 
       // Verify all questions are for the correct unit
-      for (const question of validatedQuestions) {
+      for (const question of uniqueQuestions) {
         if (question.unit !== unitNumber) {
           console.warn(
             `Question has unit ${question.unit} instead of ${unitNumber}`
@@ -262,7 +358,7 @@ Return ONLY a valid JSON array with no additional text.`;
         }
       }
 
-      return validatedQuestions;
+      return uniqueQuestions;
     } catch (validationError) {
       if (validationError instanceof ZodError) {
         const errorMessages = (validationError as ZodError).issues
