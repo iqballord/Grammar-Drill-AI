@@ -19,16 +19,16 @@ export class QuestionGenerationError extends Error {
 function getUnitSpecificGuidance(unitNumber: number, unitTitle: string): string {
   // Special handling for Units 1-5 (am/is/are variations)
   const amIsAreUnits: Record<number, string> = {
-    1: `**Unit 1 Focus: POSITIVE statements only**
+    1: `**Unit 1 Focus: POSITIVE and NEGATIVE statements only**
+- Include negative forms (I'm not, You aren't, He isn't)
 - Questions MUST use positive form: "I am", "You are", "He is", "She is", "It is", "We are", "They are"
 - DO NOT include question forms (Am I?, Are you?, Is he?)
-- Include negative forms (I'm not, You aren't, He isn't)
 - Examples: "I ___ happy", "She ___ a teacher", "They ___ students"`,
 
-    2: `**Unit 2 Focus: QUESTION forms only**
-- Questions MUST use question form: "Am I?", "Are you?", "Is he/she/it?", "Are we/they?"
+    2: `**Unit 2 Focus: POSITIVE and NEGATIVE question forms only**
+    - Questionsquestion form: "Am I?", "Are you?", "Is he/she/it?", "Are we/they?", etc
+    -include negative forms (Aren't you , Isn't she , Aren't they, etc)
 - DO NOT include positive statements (I am, You are)
-- DO NOT include negative forms (I'm not, You aren't)
 - Examples: "___ you ready?", "___ she a doctor?", "Where ___ they?"`,
 
     3: `**Unit 3 Focus: PRESENT CONTINUOUS (-ing forms)**
